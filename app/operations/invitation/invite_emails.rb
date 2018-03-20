@@ -1,12 +1,10 @@
 module Invitation
   class InviteEmails
-    attr_reader :invites
-    attr_reader :failures
+    attr_reader :invites, :failures, :mailer
 
     def initialize(invites, opts = {})
       @invites = invites
-      @after_invite_existing_user = opts[:after_invite_existing_user]
-      @after_invite_new_user = opts[:after_invite_new_user]
+      @mailer = opts[:mailer] || InviteMailer
     end
 
     def send_invites
@@ -22,11 +20,11 @@ module Invitation
     # New users are granted permissions via #after_invite_new_user, currently a null op.
     def do_invite(invite)
       if invite.existing_user?
-        deliver_email(InviteMailer.existing_user(invite))
+        deliver_email(mailer.existing_user(invite))
         after_invite_existing_user(invite)
         invite.save
       else
-        deliver_email(InviteMailer.new_user(invite))
+        deliver_email(mailer.new_user(invite))
         after_invite_new_user(invite)
       end
     end
